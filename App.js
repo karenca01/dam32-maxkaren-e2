@@ -1,12 +1,38 @@
-import { View, Text, ScrollView, TouchableOpacity, Button, StyleSheet } from 'react-native';
-import { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Button, StyleSheet, Image } from 'react-native';
+import { useState, useEffect } from 'react';
 
 const App = () => {
+  const imagenes = {
+    juan: require('./assets/images/juan.jpg'),
+    josh: require('./assets/images/josh.jpg'),
+    ana: require('./assets/images/ana.jpg'),
+  };
+
+  const usuarios = ["juan", "josh", "ana"];
+
   const [notificaciones, setNotificaciones] = useState([
-    { id: 1, mensaje: "Juan comentó tu publicación en el grupo de comerciantes unidos", leida: false },
-    { id: 2, mensaje: "Ana le dio like a tu foto", leida: false },
-    { id: 3, mensaje: "Tienes una nueva solicitud", leida: false },
+    { id: 1, mensaje: "Juan comentó tu publicación en el grupo de comerciantes unidos", leida: false, usuario: "juan" },
+    { id: 2, mensaje: "Ana le dio like a tu foto", leida: false, usuario: "ana" },
+    { id: 3, mensaje: "Tienes una nueva solicitud", leida: false, usuario: "josh" },
   ]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNotificaciones((prev) => {
+        const randomUser = usuarios[Math.floor(Math.random() * usuarios.length)];
+
+        const nueva = {
+          id: Date.now(),
+          mensaje: `Nueva notificación #${prev.length + 1}`,
+          leida: false,
+          usuario: randomUser
+        };
+        return [nueva, ...prev];
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const noLeidas = notificaciones.filter(n => !n.leida).length;
 
@@ -35,21 +61,34 @@ const App = () => {
 
       <ScrollView>
         {notificaciones.map((item) => (
-          <TouchableOpacity key={item.id} onPress={() => marcarComoLeida(item.id)}>
+          <TouchableOpacity
+            key={item.id}
+            onPress={() => marcarComoLeida(item.id)}
+          >
             <View style={[
               styles.card,
               !item.leida && styles.noLeida
             ]}>
-              <Text style={styles.texto}>{item.mensaje}</Text>
+              <Image
+                source={imagenes[item.usuario]}
+                style={styles.avatar}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.texto}>{item.mensaje}</Text>
+                <Text style={styles.estado}>
+                  {item.leida ? "Leída" : "No leída"}
+                </Text>
+              </View>
             </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
     </View>
   );
-}
+};
 
 export default App;
+
 
 const styles = StyleSheet.create({
   container: {
@@ -88,7 +127,15 @@ const styles = StyleSheet.create({
     padding: 15,
     marginHorizontal: 10,
     marginVertical: 5,
-    borderRadius: 10
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10
   },
   noLeida: {
     backgroundColor: '#e7f3ff'
